@@ -52,8 +52,9 @@ public:
 	StreamParser(Stream* aIn, char aSop, char aEop, void(*aCallback)(char*)):index(0), in(aIn), sop(aSop), eop(aEop), callback(aCallback), rawCallback(aCallback){};
 	StreamParser(Stream* aIn, void(*aCallback)(char*)):index(0), in(aIn), sop('<'), eop('>'), callback(aCallback), rawCallback(aCallback){};
 	void run();
+	void handleChar(char c);
 
-	void handleRawData();
+	void handleRawData(char C);
 
 	void setCallback(void (*aCall)(char*));
 	void setRawCallback(void (*aCall)(char*));

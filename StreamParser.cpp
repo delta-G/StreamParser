@@ -24,55 +24,59 @@ StreamParser   --  Parses any Stream object for data with end markers.
 
 void StreamParser::run() {
 
-	if (receivingRaw) {
-		handleRawData();
-	}
-	else if (in->available()) {
+//	if (receivingRaw) {
+//		handleRawData();
+//	} else
+	if (in->available()) {
 		do {
 			char c = in->read();
-
-			if (c == sop) {
-				receiving = true;
-				index = 0;
-				buffer[0] = 0;
-			}
-			if (receiving) {
-				buffer[index] = c;
-				buffer[++index] = 0;
-				if ((index == 3) && (buffer[1] >= 0x11)
-						&& (buffer[1] <= 0x14)) {
-					receivingRaw = true;
-					receiving = false;
-					return;
-				}
-				if (index >= STREAMPARSER_BUFFER_SIZE) {
-					index--;
-				}
-				if (c == eop) {
-					receiving = false;
-					callback(buffer);
-				}
-			}
+			handleChar(c);
 		} while (in->available() && greedy);
 	}
 }
 
-void StreamParser::handleRawData(){
+void StreamParser::handleChar(char c) {
+	if (receivingRaw) {
+		handleRawData(c);
+	}
 
-	// To get here we already have < and the code and the number of bytes in the buffer
-	if(in->available()){
-		int numBytes = buffer[2];
-
-		char c = in->read();
-
+	if (c == sop) {
+		receiving = true;
+		index = 0;
+		buffer[0] = 0;
+	}
+	if (receiving) {
 		buffer[index] = c;
-		buffer[++index] = 0;  // why not null terminate
-
-		if(index >= numBytes){
-			receivingRaw = false;
-			rawCallback(buffer);
+		buffer[++index] = 0;
+		if ((index == 3) && (buffer[1] >= 0x11) && (buffer[1] <= 0x14)) {
+			receivingRaw = true;
+			receiving = false;
+			return;
+		}
+		if (index >= STREAMPARSER_BUFFER_SIZE) {
+			index--;
+		}
+		if (c == eop) {
+			receiving = false;
+			callback(buffer);
 		}
 	}
+}
+
+void StreamParser::handleRawData(char c) {
+
+	// To get here we already have < and the code and the number of bytes in the buffer
+
+	int numBytes = buffer[2];
+
+	buffer[index] = c;
+	buffer[++index] = 0;  // why not null terminate
+
+	if (index >= numBytes) {
+		receivingRaw = false;
+		rawCallback(buffer);
+	}
+
 }
 
 void StreamParser::setCallback(void (*aCall)(char*)){
