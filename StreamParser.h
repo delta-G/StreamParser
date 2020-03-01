@@ -41,20 +41,25 @@ private:
 	void (*callback)(char*);
 	void (*rawCallback)(char*);
 
-	boolean receiving;
-	boolean receivingRaw;
+	boolean receiving = false;
+	boolean receivingRaw = false;
+
+	boolean greedy = false;
 
 
 public:
 
-	StreamParser(Stream* aIn, char aSop, char aEop, void(*aCallback)(char*)):index(0), in(aIn), sop(aSop), eop(aEop), callback(aCallback), rawCallback(aCallback), receiving(false), receivingRaw(false){};
-	StreamParser(Stream* aIn, void(*aCallback)(char*)):index(0), in(aIn), sop('<'), eop('>'), callback(aCallback), rawCallback(aCallback), receiving(false), receivingRaw(false){};
+	StreamParser(Stream* aIn, char aSop, char aEop, void(*aCallback)(char*)):index(0), in(aIn), sop(aSop), eop(aEop), callback(aCallback), rawCallback(aCallback){};
+	StreamParser(Stream* aIn, void(*aCallback)(char*)):index(0), in(aIn), sop('<'), eop('>'), callback(aCallback), rawCallback(aCallback){};
 	void run();
 
 	void handleRawData();
 
 	void setCallback(void (*aCall)(char*));
 	void setRawCallback(void (*aCall)(char*));
+
+	void setGreedy(bool);
+	bool getGreedy();
 
 };
 

@@ -22,36 +22,38 @@ StreamParser   --  Parses any Stream object for data with end markers.
 #include "StreamParser.h"
 
 
-void StreamParser::run(){
+void StreamParser::run() {
 
-	if(receivingRaw){
+	if (receivingRaw) {
 		handleRawData();
 	}
+	else if (in->available()) {
+		do {
+			char c = in->read();
 
-	else if(in->available()){
-		char c = in->read();
-
-		if(c == sop){
-			receiving = true;
-			index = 0;
-			buffer[0] = 0;
-		}
-		if (receiving){
-			buffer[index] = c;
-			buffer[++index] = 0;
-			if((index == 3)&&(buffer[1] >= 0x11)&&(buffer[1] <= 0x13)){
-				receivingRaw = true;
-				receiving = false;
-				return;
+			if (c == sop) {
+				receiving = true;
+				index = 0;
+				buffer[0] = 0;
 			}
-			if(index >= STREAMPARSER_BUFFER_SIZE){
-				index--;
+			if (receiving) {
+				buffer[index] = c;
+				buffer[++index] = 0;
+				if ((index == 3) && (buffer[1] >= 0x11)
+						&& (buffer[1] <= 0x14)) {
+					receivingRaw = true;
+					receiving = false;
+					return;
+				}
+				if (index >= STREAMPARSER_BUFFER_SIZE) {
+					index--;
+				}
+				if (c == eop) {
+					receiving = false;
+					callback(buffer);
+				}
 			}
-			if(c == eop){
-				receiving = false;
-				callback(buffer);
-			}
-		}
+		} while (in->available() && greedy);
 	}
 }
 
@@ -82,5 +84,11 @@ void StreamParser::setRawCallback(void (*aCall)(char*)){
 }
 
 
+void StreamParser::setGreedy(bool aBoo){
+	greedy = aBoo;
+}
 
+bool StreamParser::getGreedy(){
+	return greedy;
+}
 
